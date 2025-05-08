@@ -1,0 +1,426 @@
+# ======================================
+# 🧠 Fuzzy Set Operations Using NumPy
+# ======================================
+
+import numpy as np  # For numerical operations
+
+# Union of fuzzy sets A and B (max of each element)
+def fuzzy_union(A, B):
+    return np.maximum(A, B)
+
+# Intersection of fuzzy sets A and B (min of each element)
+def fuzzy_intersection(A, B):
+    return np.minimum(A, B)
+
+# Complement of fuzzy set A (1 - value)
+def fuzzy_complement(A):
+    return 1 - A
+
+# Difference between A and B as per fuzzy set theory (max(A, 1 - B))
+def fuzzy_difference(A, B):
+    return np.maximum(A, 1 - B)
+
+# Cartesian product of two fuzzy sets
+def cartesian_product(A, B):
+    return np.outer(A, B)
+
+# Max-Min composition between two fuzzy relations
+def max_min_composition(R, S):
+    return np.max(np.minimum.outer(R, S), axis=1)
+
+# Example fuzzy sets
+A = np.array([0.2, 0.4, 0.6, 0.8])
+B = np.array([0.3, 0.5, 0.7, 0.9])
+
+# Apply operations
+print("Union:", fuzzy_union(A, B))
+print("Intersection:", fuzzy_intersection(A, B))
+print("Complement of A:", fuzzy_complement(A))
+print("Difference:", fuzzy_difference(A, B))
+
+# Relations for max-min
+R = np.array([0.2, 0.5, 0.4])
+S = np.array([0.6, 0.3, 0.7])
+
+# Cartesian product (R x S)
+print("Cartesian Product:\n", cartesian_product(R, S))
+
+# Max-Min Composition
+print("Max-Min Composition:", max_min_composition(R, S))
+
+
+# ======================================
+# 🧠 Fuzzy Set Operations Using Dict + Pandas
+# ======================================
+
+import pandas as pd  # For matrix-style display
+
+# Define fuzzy sets using dictionaries
+A = {'a': 0.2, 'b': 0.7, 'c': 0.5}
+B = {'a': 0.6, 'b': 0.4, 'c': 0.9}
+
+# Get universe (all unique elements)
+universe = sorted(set(A) | set(B))
+
+# Union of fuzzy sets A and B
+def fuzzy_union(A, B):
+    return {x: max(A.get(x, 0), B.get(x, 0)) for x in universe}
+
+# Intersection of fuzzy sets A and B
+def fuzzy_intersection(A, B):
+    return {x: min(A.get(x, 0), B.get(x, 0)) for x in universe}
+
+# Complement of fuzzy set A
+def fuzzy_complement(A):
+    return {x: 1 - A.get(x, 0) for x in universe}
+
+# Difference A - B
+def fuzzy_difference(A, B):
+    return {x: min(A.get(x, 0), 1 - B.get(x, 0)) for x in universe}
+
+# Cartesian product of fuzzy sets
+def cartesian_product(X, Y):
+    return {(x, y): min(X[x], Y[y]) for x in X for y in Y}
+
+# Max-Min Composition of two relations
+def max_min_composition(R1, R2):
+    X = sorted(set(x for (x, y) in R1))
+    Z = sorted(set(z for (y, z) in R2))
+    Y = sorted(set(y for (x, y) in R1))
+
+    result = {}
+    for x in X:
+        for z in Z:
+            min_vals = [min(R1.get((x, y), 0), R2.get((y, z), 0)) for y in Y]
+            result[(x, z)] = max(min_vals)
+    return result
+
+# Perform operations
+print("\nDict-Based Operations:")
+print("Union:", fuzzy_union(A, B))
+print("Intersection:", fuzzy_intersection(A, B))
+print("Complement of A:", fuzzy_complement(A))
+print("Difference A - B:", fuzzy_difference(A, B))
+
+# Fuzzy relations using Cartesian product
+R1 = cartesian_product(A, B)
+R2 = cartesian_product(B, A)
+
+# Display R1 using pandas DataFrame
+print("\nFuzzy Relation R1 (A x B):")
+df_R1 = pd.DataFrame(index=A, columns=B)
+for (x, y), val in R1.items():
+    df_R1.loc[x, y] = round(val, 2)
+print(df_R1.fillna('-'))
+
+# Display R2
+print("\nFuzzy Relation R2 (B x A):")
+df_R2 = pd.DataFrame(index=B, columns=A)
+for (x, y), val in R2.items():
+    df_R2.loc[x, y] = round(val, 2)
+print(df_R2.fillna('-'))
+
+# Max-Min Composition of R1 and R2
+composition = max_min_composition(R1, R2)
+
+# Show composition matrix
+print("\nMax-Min Composition (R1 ○ R2):")
+df_comp = pd.DataFrame(index=A, columns=A)
+for (x, z), val in composition.items():
+    df_comp.loc[x, z] = round(val, 2)
+print(df_comp.fillna('-'))
+
+
+1. What is a fuzzy set?
+Answer:
+A fuzzy set is a collection of elements where each element has a degree of membership between 0 and 1. Unlike classical sets, where an element either belongs or does not belong to the set, fuzzy sets allow partial membership. The degree of membership represents the degree to which an element belongs to the set.
+
+2. What is the difference between classical set operations and fuzzy set operations?
+Answer:
+In classical set theory, the operations (union, intersection, complement, etc.) work with binary values (0 or 1). However, in fuzzy set theory, these operations work with continuous membership values between 0 and 1. For example:
+
+Union: The membership value for the union of two fuzzy sets is the maximum of the membership values of the elements from both sets.
+
+Intersection: The membership value for the intersection of two fuzzy sets is the minimum of the membership values of the elements from both sets.
+
+3. Explain the Union operation in fuzzy sets.
+Answer:
+The union of two fuzzy sets 
+𝐴
+A and 
+𝐵
+B is defined as a fuzzy set where each element's membership value is the maximum of its membership value in 
+𝐴
+A and 
+𝐵
+B.
+Mathematically:
+
+Union: 
+𝐴
+∪
+𝐵
+=
+max
+⁡
+(
+𝐴
+(
+𝑥
+)
+,
+𝐵
+(
+𝑥
+)
+)
+Union: A∪B=max(A(x),B(x))
+For example, if 
+𝐴
+=
+[
+0.2
+,
+0.4
+,
+0.6
+,
+0.8
+]
+A=[0.2,0.4,0.6,0.8] and 
+𝐵
+=
+[
+0.3
+,
+0.5
+,
+0.7
+,
+0.9
+]
+B=[0.3,0.5,0.7,0.9], the union result will be the maximum of corresponding values at each position.
+
+4. What is the purpose of the cartesian_product function?
+Answer:
+The Cartesian product of two fuzzy sets 
+𝐴
+A and 
+𝐵
+B is a fuzzy relation where each pair of elements from 
+𝐴
+A and 
+𝐵
+B is associated with the minimum of their membership values. It creates a matrix-like structure that represents the relationships between elements of the two sets.
+For example, if 
+𝐴
+=
+{
+𝑎
+:
+0.2
+,
+𝑏
+:
+0.7
+}
+A={a:0.2,b:0.7} and 
+𝐵
+=
+{
+𝑎
+:
+0.6
+,
+𝑏
+:
+0.4
+}
+B={a:0.6,b:0.4}, the Cartesian product will generate a matrix of the minimum membership values for each pair of elements from 
+𝐴
+A and 
+𝐵
+B.
+
+5. What is the Max-Min composition in fuzzy relations?
+Answer:
+The Max-Min composition is used to combine two fuzzy relations. It is similar to matrix multiplication in linear algebra, where the degree of membership between elements 
+𝑥
+x and 
+𝑧
+z is the maximum of the minimum values of the relations between 
+𝑥
+x and intermediate elements 
+𝑦
+y, and between 
+𝑦
+y and 
+𝑧
+z.
+Mathematically:
+
+𝐶
+(
+𝑥
+,
+𝑧
+)
+=
+max
+⁡
+𝑦
+min
+⁡
+(
+𝑅
+1
+(
+𝑥
+,
+𝑦
+)
+,
+𝑅
+2
+(
+𝑦
+,
+𝑧
+)
+)
+C(x,z)= 
+y
+max
+​
+ min(R1(x,y),R2(y,z))
+This operation is commonly used in fuzzy logic for combining fuzzy relations and computing composition results.
+
+6. How does the fuzzy_complement function work?
+Answer:
+The complement of a fuzzy set 
+𝐴
+A is a fuzzy set where each element's membership value is subtracted from 1. It represents the "opposite" of the original fuzzy set.
+Mathematically:
+
+Complement of 
+𝐴
+=
+1
+−
+𝐴
+(
+𝑥
+)
+Complement of A=1−A(x)
+For example, if an element 
+𝑥
+x has a membership value of 0.7 in set 
+𝐴
+A, the complement will have a membership value of 
+1
+−
+0.7
+=
+0.3
+1−0.7=0.3.
+
+7. What is the purpose of using NumPy in fuzzy set operations?
+Answer:
+NumPy is used in fuzzy set operations to efficiently perform mathematical operations like maximum, minimum, and outer product on large arrays. These operations are applied element-wise, which is essential when dealing with sets containing continuous membership values. NumPy's vectorized operations speed up computations, making them more efficient than using loops.
+
+8. Explain the fuzzy_difference operation.
+Answer:
+The difference between two fuzzy sets 
+𝐴
+A and 
+𝐵
+B is defined as a fuzzy set where each element's membership value is the maximum of its membership value in 
+𝐴
+A and 
+1
+−
+𝐵
+(
+𝑥
+)
+1−B(x), i.e., the complement of 
+𝐵
+B for the corresponding element.
+Mathematically:
+
+Difference: 
+𝐴
+−
+𝐵
+=
+max
+⁡
+(
+𝐴
+(
+𝑥
+)
+,
+1
+−
+𝐵
+(
+𝑥
+)
+)
+Difference: A−B=max(A(x),1−B(x))
+This operation reflects the "difference" between the membership values of two fuzzy sets.
+
+9. What is the role of the fuzzy_intersection function?
+Answer:
+The intersection of two fuzzy sets 
+𝐴
+A and 
+𝐵
+B is a fuzzy set where each element’s membership value is the minimum of the membership values from 
+𝐴
+A and 
+𝐵
+B.
+Mathematically:
+
+Intersection: 
+𝐴
+∩
+𝐵
+=
+min
+⁡
+(
+𝐴
+(
+𝑥
+)
+,
+𝐵
+(
+𝑥
+)
+)
+Intersection: A∩B=min(A(x),B(x))
+For example, if the membership value of element 
+𝑥
+x in 
+𝐴
+A is 0.6 and in 
+𝐵
+B is 0.7, the intersection will have a membership value of 0.6 for element 
+𝑥
+x.
+
+10. How can fuzzy set operations be applied in real-world problems?
+Answer:
+Fuzzy set operations are widely used in various applications where uncertainty or partial truth is involved. Some real-world applications include:
+
+Control systems (e.g., fuzzy logic controllers in washing machines, air conditioners).
+
+Decision-making in uncertain environments (e.g., medical diagnosis, risk assessment).
+
+Pattern recognition and image processing where elements have partial membership in different classes.
+
+Fuzzy set operations help in handling imprecise data and making decisions based on degrees of membership rather than binary decisions.

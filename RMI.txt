@@ -1,0 +1,88 @@
+# Install Pyro5 if not already installed
+!pip install Pyro5
+
+# ------------------ IMPORTS ------------------
+
+import Pyro5.api  # Import Pyro5 API for both server and client
+import threading  # Import threading to run server and client together
+import time       # Import time to delay client so server can start
+
+# ------------------ SERVER SETUP ------------------
+
+@Pyro5.api.expose  # Make the class accessible remotely
+class ConcatServer:
+    def concatenate(self, str1, str2):
+        print(f"📥 Server received: '{str1}' and '{str2}'")  # Log the input
+        return str1 + str2  # Return concatenated result
+
+def run_server():
+    daemon = Pyro5.server.Daemon()           # Create Pyro5 server daemon
+    uri = daemon.register(ConcatServer)      # Register the class, get URI
+    print(f"🖥️ Server is running. URI: {uri}")  # Display URI
+    global server_uri
+    server_uri = str(uri)                    # Store URI for client to use
+    daemon.requestLoop()                     # Start server loop
+
+# Start server in background using threading
+server_thread = threading.Thread(target=run_server, daemon=True)
+server_thread.start()
+
+# Delay client start to ensure server is ready
+time.sleep(2)
+
+# ------------------ CLIENT SETUP ------------------
+
+def run_client():
+    print("\n👨‍💻 Starting client...\n")
+    
+    # Use the URI printed/stored from the server
+    uri = server_uri
+    concat_server = Pyro5.api.Proxy(uri)  # Create proxy to connect to server
+
+    # Get two strings from the user
+    s1 = input("Enter first string: ")
+    s2 = input("Enter second string: ")
+
+    # Call remote concatenate method
+    result = concat_server.concatenate(s1, s2)
+
+    # Display the result
+    print(f"✅ Concatenated Result: {result}")
+
+# Run the client
+run_client()
+
+
+
+
+1. What is Pyro5?
+Pyro5 is a Python library for building distributed applications, allowing you to call methods on remote Python objects as if they were local.
+
+2. What is the role of @expose in Pyro5?
+It marks a class or method as accessible remotely by clients.
+
+3. What is a URI in Pyro5?
+URI (Uniform Resource Identifier) is a unique string generated when you register a remote object. Clients use it to access that object.
+
+4. What does daemon.register() do?
+It registers the class or object with the Pyro daemon and returns the URI for remote access.
+
+🧠 Conceptual Questions
+5. Why do we use daemon.requestLoop()?
+To keep the server running and listening for incoming RPC requests.
+
+6. What happens if you enter the wrong URI in the client?
+The client will raise a connection or lookup error because it can't find or connect to the specified remote object.
+
+7. Can we send other data types like integers or lists using Pyro5?
+Yes, Pyro5 supports most built-in Python types including integers, strings, lists, dictionaries, etc.
+
+8. Is Pyro5 synchronous or asynchronous?
+By default, Pyro5 is synchronous. You can call methods and wait for their response. Async is possible with extra setup.
+
+⚙️ Technical Questions
+9. How do you make the server accessible on another machine?
+Run the server with host set to 0.0.0.0, and on the client, use the server's IP instead of localhost.
+
+10. Is Pyro5 secure?
+Basic Pyro5 is not encrypted. For security, you must implement authentication and encryption (e.g., using TLS).

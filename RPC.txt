@@ -1,0 +1,119 @@
+# ------------------ SERVER PART ------------------
+
+from xmlrpc.server import SimpleXMLRPCServer  # Import the XML-RPC server module
+import math  # Import math to use the factorial function
+
+# Define a function to compute the factorial of a number
+def factorial(n):
+    if n < 0:
+        return "Error: Negative number"  # Return error message for negative input
+    return math.factorial(n)  # Use built-in math.factorial to compute factorial
+
+# Create an XML-RPC server on localhost at port 8000
+server = SimpleXMLRPCServer(("localhost", 8000), allow_none=True)
+
+print("🖥️ RPC Server is running on port 8000...")  # Print that the server has started
+
+# Register the factorial function with the name 'compute_factorial'
+server.register_function(factorial, "compute_factorial")
+
+# To keep the server running continuously, we need to comment this next block
+# if we want the client code below to run in the same file
+# server.serve_forever()
+
+
+# ------------------ CLIENT PART (Simulated Inline for Demo) ------------------
+
+import threading  # Import threading to run server and client together in demo
+
+# Define a function to run the server in the background using threading
+def start_server():
+    server.serve_forever()  # Start serving RPC requests
+
+# Start the server in a background thread
+server_thread = threading.Thread(target=start_server, daemon=True)
+server_thread.start()  # This allows the rest of the script (client) to continue
+
+import xmlrpc.client  # Import the XML-RPC client module
+
+# Create a proxy object that connects to the server
+proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
+
+# Take user input and convert it into an integer
+n = int(input("Enter a number to compute factorial: "))
+
+# Call the server's 'compute_factorial' function using the proxy
+result = proxy.compute_factorial(n)
+
+# Print the result returned from the server
+print(f"✅ Factorial of {n} is: {result}")
+
+
+
+
+
+1. What is XML-RPC?
+Answer:
+XML-RPC (XML Remote Procedure Call) is a protocol that allows software running on different machines to make procedure calls (functions) over the internet using HTTP and XML to encode requests and responses.
+
+2. What modules are used for XML-RPC in Python?
+Answer:
+
+xmlrpc.server for the server side (e.g., SimpleXMLRPCServer)
+
+xmlrpc.client for the client side (e.g., ServerProxy)
+
+3. What is the purpose of SimpleXMLRPCServer?
+Answer:
+It creates a server that listens for XML-RPC requests and executes the registered functions when called remotely by clients.
+
+4. Why is serve_forever() used?
+Answer:
+It keeps the server running continuously to accept and process incoming XML-RPC requests from clients.
+
+🧠 Conceptual
+5. How does the client communicate with the server?
+Answer:
+The client uses a proxy object (created with ServerProxy) to send XML-encoded HTTP POST requests to the server, which executes the requested function and sends back the result.
+
+6. Why do we use a proxy object in the client code?
+Answer:
+The proxy object acts as a local interface to call the remote functions as if they were local Python functions.
+
+7. What happens if you input a negative number?
+Answer:
+The server's factorial function checks if the number is negative and returns the string "Error: Negative number" instead of trying to compute the factorial.
+
+8. Can we register multiple functions in the server? How?
+Answer:
+Yes, we can register multiple functions using multiple server.register_function() calls.
+Example:
+
+python
+Copy
+Edit
+server.register_function(add, "add")
+server.register_function(subtract, "subtract")
+⚙️ Technical/Code-Based
+9. What is the purpose of allow_none=True?
+Answer:
+It allows None values to be passed in XML-RPC requests and responses, which are not allowed by default in XML-RPC.
+
+10. What would happen if server.register_function() is omitted?
+Answer:
+The function would not be available to the client, and calling it through the proxy would result in an error like "method 'compute_factorial' is not supported".
+
+11. Can XML-RPC handle complex data types like lists or dictionaries?
+Answer:
+Yes, XML-RPC supports basic types like integers, strings, lists, dictionaries, and booleans. However, it doesn't support custom classes or more complex objects by default.
+
+12. How would you secure this RPC server?
+Answer:
+
+Run it behind a firewall.
+
+Use HTTPS instead of HTTP (requires a more advanced server setup).
+
+Implement authentication (e.g., token or API key validation).
+
+Validate all input on the server side to avoid code injection or misuse.
