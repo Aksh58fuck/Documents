@@ -1,0 +1,7 @@
+# CLIENT code
+import xmlrpc.client
+
+proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
+n = int(input("Enter a number to compute factorial: "))
+result = proxy.compute_factorial(n)
+print(f"✅ Factorial of {n} is: {result}")

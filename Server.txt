@@ -1,0 +1,19 @@
+# Run this in one cell to start the server in background
+from xmlrpc.server import SimpleXMLRPCServer
+import math
+import threading
+
+def factorial(n):
+    if n < 0:
+        return "Error: Negative number"
+    return math.factorial(n)
+
+def start_server():
+    server = SimpleXMLRPCServer(("localhost", 8000), allow_none=True)
+    server.register_function(factorial, "compute_factorial")
+    print("🖥️ RPC Server is running on port 8000...")
+    server.serve_forever()
+
+# Start the server in a background thread
+thread = threading.Thread(target=start_server, daemon=True)
+thread.start()
